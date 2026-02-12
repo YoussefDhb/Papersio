@@ -1,0 +1,41 @@
+# AWS Configuration
+aws_region  = "eu-west-3"
+environment = "prod"
+
+# Docker Images (update with your GitHub username)
+backend_image  = "ghcr.io/YOUR_GITHUB_USERNAME/papersio-backend:latest"
+frontend_image = "ghcr.io/YOUR_GITHUB_USERNAME/papersio-frontend:latest"
+
+# ECS Configuration
+desired_count    = 2
+backend_cpu      = 1024
+backend_memory   = 2048
+frontend_cpu     = 512
+frontend_memory  = 1024
+
+# Auto Scaling
+min_capacity   = 1
+max_capacity   = 4
+cpu_threshold  = 70
+
+# Database Configuration
+db_instance_class    = "db.t3.micro"
+db_allocated_storage = 20
+db_name              = "papersio"
+db_username          = "papersio"
+
+# Secrets (DO NOT COMMIT THESE VALUES)
+google_api_key = "your-gemini-api-key-here"
+
+# Optional Model Configuration
+default_model = "gemini-2.5-flash"
+
+# Optional Hugging Face token (higher rate limits for embedding downloads)
+# hf_token = "your-hf-token-here"
+
+# Domain Configuration (Optional - for HTTPS)
+# domain_name     = "papersio.yourdomain.com"
+# certificate_arn = "arn:aws:acm:eu-west-3:123456789012:certificate/your-cert-id"
+
+# Monitoring
+log_retention_days = 7

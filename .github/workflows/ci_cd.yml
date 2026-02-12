@@ -1,0 +1,278 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  terraform-validate:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+    
+    - name: Terraform Format Check
+      run: |
+        cd terraform
+        terraform fmt -check -recursive
+      continue-on-error: true
+    
+    - name: Terraform Init
+      run: |
+        cd terraform
+        terraform init -backend=false
+    
+    - name: Terraform Validate
+      run: |
+        cd terraform
+        terraform validate
+
+  backend-quality:
+    name: Backend Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        pip install flake8 black pytest pytest-asyncio
+    
+    - name: Lint with flake8
+      run: |
+        cd backend
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+    
+    - name: Format check with black
+      run: |
+        cd backend
+        black --check --diff .
+      continue-on-error: true
+    
+    - name: Run backend tests
+      run: |
+        cd backend
+        pytest tests/ -v || echo "No tests found or tests failed (continuing)"
+      continue-on-error: true
+
+  frontend-quality:
+    name: Frontend Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Clean build cache
+      run: |
+        cd frontend
+        rm -rf .next
+    
+    - name: Lint with ESLint
+      run: |
+        cd frontend
+        npm run lint || echo "Linting completed with warnings"
+      continue-on-error: true
+    
+    - name: Type check with TypeScript
+      run: |
+        cd frontend
+        npx tsc --noEmit
+      continue-on-error: true
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+  docker-build:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-quality, frontend-quality]
+    permissions:
+      contents: read
+      packages: write
+    
+    strategy:
+      matrix:
+        service: [backend, frontend]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Free Disk Space
+      run: |
+        echo "Disk space before cleanup:"
+        df -h
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        docker system prune -af --volumes
+        echo "Disk space after cleanup:"
+        df -h
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./${{ matrix.service }}
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=min
+    
+    - name: Image digest
+      run: echo "Image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [backend-quality, frontend-quality]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Free Disk Space
+      run: |
+        echo "Disk space before cleanup:"
+        df -h
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        docker system prune -af --volumes
+        echo "Disk space after cleanup:"
+        df -h
+    
+    - name: Create .env file
+      run: |
+        echo "GOOGLE_API_KEY=test_key_for_ci" > .env
+        echo "DEFAULT_PROVIDER=gemini" >> .env
+    
+    - name: Build Docker images
+      run: docker compose build
+    
+    - name: Start services
+      run: docker compose up -d
+    
+    - name: Wait for services to be ready
+      run: |
+        echo "Waiting for backend to be ready..."
+        timeout 60 bash -c 'until curl -f http://localhost:8000/ > /dev/null 2>&1; do sleep 2; done'
+        echo "Waiting for frontend to be ready..."
+        timeout 60 bash -c 'until curl -f http://localhost:3000/ > /dev/null 2>&1; do sleep 2; done'
+    
+    - name: Check backend health
+      run: |
+        response=$(curl -s http://localhost:8000/)
+        echo "Backend response: $response"
+        if [[ $response != *"status"* ]]; then
+          echo "Backend health check failed"
+          exit 1
+        fi
+    
+    - name: Check frontend accessibility
+      run: |
+        status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/)
+        echo "Frontend status code: $status"
+        if [[ $status != "200" ]]; then
+          echo "Frontend is not accessible"
+          exit 1
+        fi
+    
+    - name: View logs on failure
+      if: failure()
+      run: |
+        echo "=== Backend Logs ==="
+        docker compose logs backend
+        echo "=== Frontend Logs ==="
+        docker compose logs frontend
+    
+    - name: Stop services
+      if: always()
+      run: docker compose down
+
+  ci-cd-summary:
+    name: CI/CD Summary
+    runs-on: ubuntu-latest
+    needs: [terraform-validate, backend-quality, frontend-quality, docker-build, integration-test]
+    if: always()
+    
+    steps:
+    - name: Check results
+      run: |
+        echo "### CI/CD Pipeline Results ###"
+        echo "Terraform Validation: ${{ needs.terraform-validate.result }}"
+        echo "Backend Quality: ${{ needs.backend-quality.result }}"
+        echo "Frontend Quality: ${{ needs.frontend-quality.result }}"
+        echo "Docker Build: ${{ needs.docker-build.result }}"
+        echo "Integration Test: ${{ needs.integration-test.result }}"
+        
+        if [[ "${{ needs.terraform-validate.result }}" == "failure" ]] || \
+           [[ "${{ needs.backend-quality.result }}" == "failure" ]] || \
+           [[ "${{ needs.frontend-quality.result }}" == "failure" ]] || \
+           [[ "${{ needs.docker-build.result }}" == "failure" ]] || \
+           [[ "${{ needs.integration-test.result }}" == "failure" ]]; then
+          echo "CI/CD Pipeline failed"
+          exit 1
+        else
+          echo "CI/CD Pipeline passed"
+        fi

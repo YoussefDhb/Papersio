@@ -1,0 +1,56 @@
+\documentclass[11pt,a4paper]{article}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[final,tracking=true,expansion=false]{microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{url}
+\usepackage{enumitem}
+
+% Hyperref for clickable links (now that fonts are installed!)
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=blue,
+    citecolor=blue,
+    breaklinks=true
+}
+
+% Simple header/footer (no fancyhdr to avoid font issues)
+\pagestyle{plain}
+
+% Title information
+\title{\textbf{{{TITLE}}}}
+\author{
+    Papersio \\
+    \small {{DATE}}
+}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% Abstract
+\begin{abstract}
+{{ABSTRACT}}
+
+\noindent\textbf{Keywords:} {{KEYWORDS}}
+\end{abstract}
+
+% Main content sections
+{{CONTENT}}
+
+% Bibliography
+\bibliographystyle{IEEEtran}
+\bibliography{BIBFILE}
+
+\end{document}

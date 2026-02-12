@@ -1,0 +1,60 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: papersio-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - HF_TOKEN=${HF_TOKEN}
+      - DEFAULT_PROVIDER=${DEFAULT_PROVIDER:-gemini}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini-2.5-flash}
+    env_file:
+      - .env
+    volumes:
+      - ./backend/research.db:/app/research.db
+      - ./backend/chroma_db:/app/chroma_db
+      - ./backend/temp:/app/temp
+    networks:
+      - papersio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: papersio-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8000
+      - NODE_ENV=production
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - papersio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  papersio-network:
+    driver: bridge
+
+volumes:
+  research-db:
+  chroma-db:
+  temp-files:
