@@ -25,5 +25,3 @@ terraform.rc
 
 # Lock files (optional - some teams commit these)
 # .terraform.lock.hcl
-
-deployment.md

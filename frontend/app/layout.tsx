@@ -15,7 +15,7 @@ const fraunces = Fraunces({
 })
 
 export const metadata: Metadata = {
-  title: 'Papersio - Ultra Mode',
+  title: 'Papersio',
   description: 'AI research assistant for papers and web sources with LangGraph and full PDF analysis',
 }
 

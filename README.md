@@ -10,17 +10,17 @@ Papersio is a multi-agent research assistant that writes evidence-driven researc
 
 ## Table of Contents
 
-- Overview
-- Features
-- Architecture
-- Getting Started
-- Usage
-- Configuration
-- Deployment
-- Project Structure
-- Troubleshooting
-- Contributing
-- License
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Deployment](#deployment)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Overview
 
@@ -28,7 +28,7 @@ Papersio orchestrates specialized agents to deliver research reports with citati
 
 ## Features
 
-- Multi-agent workflow (Planner, Analyst, Writer, Critic)
+- Multi-agent workflow (Planner -> Analyst -> Writer -> Critic)
 - Web and ArXiv search with smart routing
 - WebSocket live progress updates
 - LaTeX-based PDF report export
@@ -40,7 +40,7 @@ Papersio orchestrates specialized agents to deliver research reports with citati
 - Backend: FastAPI, LangGraph, ChromaDB, PostgreSQL (prod) or SQLite (dev)
 - Frontend: Next.js 16, TypeScript, Tailwind
 - LLM: Google Gemini (google-genai)
-- Infra: Docker Compose for local, Terraform for AWS ECS Fargate
+- Infra: Docker Compose for local, Terraform for AWS deployment
 
 ## Getting Started
 
@@ -49,7 +49,7 @@ Papersio orchestrates specialized agents to deliver research reports with citati
 - Python 3.11+
 - Node.js 20+
 - Docker
-- Google Gemini API key
+- [Google Gemini API key](https://aistudio.google.com/app/apikey)
 
 ### Quick Start (Docker)
 
@@ -64,11 +64,11 @@ Papersio orchestrates specialized agents to deliver research reports with citati
    ```bash
    docker-compose up --build
    ```
-3. Open http://localhost:3000
+3. Open [http://localhost:3000](http://localhost:3000)
 
 Health:
-- Backend: http://localhost:8000/
-- Docs: http://localhost:8000/docs
+- Backend: [http://localhost:8000/](http://localhost:8000/)
+- Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ### Local Development
 
@@ -90,7 +90,7 @@ npm run dev
 
 ## Usage
 
-1. Open http://localhost:3000
+1. Open [http://localhost:3000](http://localhost:3000)
 2. Enter a research question
 3. Start the workflow and monitor progress
 4. Review the report and export to PDF if needed
@@ -102,7 +102,7 @@ Environment variables (project root .env):
 - `DEFAULT_PROVIDER` (default: gemini)
 - `DEFAULT_MODEL` (optional)
 - `HF_TOKEN` (optional, for embeddings)
-- `LOG_LEVEL` (optional)
+- `LOG_LEVEL` (optional, for backend logs)
 
 Frontend (optional):
 - `NEXT_PUBLIC_BACKEND_URL` to override the backend URL in local development
@@ -122,15 +122,15 @@ terraform apply
 Notes:
 - Set images, secrets, and region in terraform.tfvars
 - HTTPS and custom domain require ACM + Route 53
-- See terraform/deployment.txt for detailed guidance
+- See [terraform/deployment.md](terraform/deployment.md) for detailed guidance
 
 ## Project Structure
 
-- backend/: FastAPI app, agents, tools, PDF generation
-- frontend/: Next.js UI and API client
-- terraform/: AWS infrastructure (ECS, ALB, RDS, VPC)
-- docker-compose.yml: Local orchestration
-- .github/workflows/ci_cd.yml: CI/CD pipeline
+- [backend/](backend/): FastAPI app, agents, tools, PDF generation
+- [frontend/](frontend/): Next.js UI and API client
+- [terraform/](terraform/): AWS infrastructure (ECS, ALB, RDS, VPC)
+- [docker-compose.yml](docker-compose.yml): Local orchestration
+- [.github/workflows/ci_cd.yml](.github/workflows/ci_cd.yml): CI/CD pipeline
 
 
 ## Troubleshooting
@@ -147,4 +147,4 @@ Notes:
 
 ## License
 
-MIT License. See LICENSE for details.
+MIT License. See [LICENSE](LICENSE) for details.

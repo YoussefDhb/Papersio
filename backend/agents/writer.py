@@ -11,40 +11,36 @@ class WriterAgent:
     """
     Writes comprehensive research reports based on analysis
     """
-    
+
     def __init__(self, llm_provider):
         """
         Initialize the writer with an LLM provider
-        
+
         Args:
             llm_provider: LLMProvider instance
         """
         self.llm = llm_provider
-    
+
     async def write_report(
-        self,
-        question: str,
-        analysis: Dict,
-        sources_context: str = "",
-        critique_feedback: Optional[Dict] = None
+        self, question: str, analysis: Dict, sources_context: str = "", critique_feedback: Optional[Dict] = None
     ) -> Dict:
         """
         Write a comprehensive research report
-        
+
         Args:
             question: The research question
             analysis: Analysis from the Analyst Agent
             sources_context: Optional raw source text
-            
+
         Returns:
             Dict with:
             - report: The written report
             - structure: Report structure used
         """
-        
+
         findings_text = "\n".join([f"- {f}" for f in analysis.get("key_findings", [])])
         themes_text = "\n".join([f"- {t}" for t in analysis.get("themes", [])])
-        
+
         prompt = f"""You are an expert research writer creating an academic-style research report.
     Your output will be used to generate a publication-quality PDF, so structure, rigor, and citations are crucial.
 
@@ -68,10 +64,10 @@ REVISION FEEDBACK (address all items):
 """
             for item in critique_feedback.get("recommendations", []):
                 prompt += f"- {item}\n"
-        
+
         if sources_context:
             prompt += f"\nRAW SOURCES (for reference):\n{sources_context[:2000]}\n"
-        
+
         prompt += """
             Your task:
             Write a comprehensive research report using the EXACT section structure below. Each section is mandatory.
@@ -112,14 +108,14 @@ REVISION FEEDBACK (address all items):
             Write the complete structured report now, following the EXACT section headings above.
             Do not include any text outside the report:
         """
-        
+
         required_sections = [
             "## Abstract",
             "## Introduction",
             "## Methodology",
             "## Findings",
             "## Discussion",
-            "## Conclusion"
+            "## Conclusion",
         ]
 
         def missing_sections(report_text: str) -> list:
@@ -145,17 +141,7 @@ REVISION FEEDBACK (address all items):
                                 """
                 report = await run_in_thread(self.llm.generate, repair_prompt, temperature=0.4, max_tokens=4000)
 
-            return {
-                "success": True,
-                "report": report,
-                "structure": "markdown",
-                "word_count": len(report.split())
-            }
+            return {"success": True, "report": report, "structure": "markdown", "word_count": len(report.split())}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "report": f"Error generating report: {str(e)}",
-                "structure": "text"
-            }
+            return {"success": False, "error": str(e), "report": f"Error generating report: {str(e)}", "structure": "text"}

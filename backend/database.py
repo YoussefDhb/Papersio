@@ -21,11 +21,7 @@ connect_args = {}
 if DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}  # Needed for SQLite
 
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,  # Set to True for SQL debugging
-    connect_args=connect_args
-)
+engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)  # Set to True for SQL debugging
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -39,7 +35,7 @@ def init_db():
 def get_db() -> Session:
     """
     Get a database session
-    
+
     Usage:
         with get_db() as db:
             pass
@@ -54,7 +50,7 @@ def get_db() -> Session:
 def get_db_session() -> Session:
     """
     Get a database session (for non-FastAPI usage)
-    
+
     Usage:
         db = get_db_session()
         db.close()

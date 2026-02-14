@@ -10,11 +10,12 @@ from typing import List, Dict
 from pathlib import Path
 from dotenv import load_dotenv
 
-env_path = Path(__file__).parent.parent.parent / '.env'
+env_path = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 try:
     from ddgs import DDGS
+
     SEARCH_AVAILABLE = True
 except ImportError:
     SEARCH_AVAILABLE = False
@@ -24,81 +25,70 @@ except ImportError:
 def search_web(query: str, max_results: int = 5) -> Dict:
     """
     Search the web using DuckDuckGo (free, no API key needed!)
-    
+
     Args:
         query: Search query string
         max_results: Maximum number of results to return
-        
+
     Returns:
         Dict with:
         - results: List of search results
         - query: Original query
         - success: Whether search was successful
     """
-    
+
     if not SEARCH_AVAILABLE:
         return {
             "success": False,
             "error": "DuckDuckGo search not installed. Install with: pip install ddgs",
             "results": [],
-            "query": query
+            "query": query,
         }
-    
+
     try:
         ddgs = DDGS()
-        
-        search_results = ddgs.text(
-            query=query,  # Changed from 'keywords' to 'query'
-            max_results=max_results
-        )
-        
+
+        search_results = ddgs.text(query=query, max_results=max_results)  # Changed from 'keywords' to 'query'
+
         results = []
         for item in search_results:
-            results.append({
-                "title": item.get('title', ''),
-                "url": item.get('href', ''),
-                "content": item.get('body', ''),
-                "score": 1.0,
-                "source": "web"
-            })
+            results.append(
+                {
+                    "title": item.get("title", ""),
+                    "url": item.get("href", ""),
+                    "content": item.get("body", ""),
+                    "score": 1.0,
+                    "source": "web",
+                }
+            )
 
         results = _filter_results(query, results, 0.12)
-        
-        return {
-            "success": True,
-            "results": results,
-            "query": query,
-            "count": len(results)
-        }
-        
+
+        return {"success": True, "results": results, "query": query, "count": len(results)}
+
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e),
-            "results": [],
-            "query": query
-        }
+        return {"success": False, "error": str(e), "results": [], "query": query}
 
 
 def format_web_results_for_ai(results: List[Dict]) -> str:
     """
     Format web search results into a readable string for AI
-    
+
     Args:
         results: List of web search results
-        
+
     Returns:
         Formatted string with numbered results
     """
     if not results:
         return "No web results found."
-    
+
     formatted = "WEB SEARCH RESULTS:\n\n"
     for i, result in enumerate(results, 1):
         formatted += f"[{i}] {result['title']}\n"
         formatted += f"    URL: {result['url']}\n"
         formatted += f"    Content: {result['content'][:300]}...\n\n"
-    
+
     return formatted
 
 

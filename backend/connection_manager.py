@@ -1,10 +1,12 @@
 from typing import Dict
 from fastapi import WebSocket
 
+
 class ConnectionManager:
     """
     Manages active WebSocket connections
     """
+
     def __init__(self):
         self.active_connections: Dict[str, WebSocket] = {}
 
@@ -19,5 +21,6 @@ class ConnectionManager:
     async def send_message(self, message: dict, client_id: str):
         if client_id in self.active_connections:
             await self.active_connections[client_id].send_json(message)
+
 
 manager = ConnectionManager()

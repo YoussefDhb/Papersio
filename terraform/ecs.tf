@@ -1,5 +1,5 @@
 locals {
-  application_url = var.certificate_arn != "" ? "https://${var.domain_name != "" ? var.domain_name : aws_lb.main.dns_name}" : "http://${aws_lb.main.dns_name}"
+  application_url     = var.certificate_arn != "" ? "https://${var.domain_name != "" ? var.domain_name : aws_lb.main.dns_name}" : "http://${aws_lb.main.dns_name}"
   hf_token_secret_arn = length(aws_secretsmanager_secret.hf_token) > 0 ? aws_secretsmanager_secret.hf_token[0].arn : ""
   backend_secrets = concat(
     [
@@ -23,12 +23,12 @@ locals {
 
 resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-cluster"
-  
+
   setting {
     name  = "containerInsights"
     value = "enabled"
   }
-  
+
   tags = {
     Name = "${var.project_name}-cluster"
   }
@@ -37,7 +37,7 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_cloudwatch_log_group" "backend" {
   name              = "/ecs/${var.project_name}-backend"
   retention_in_days = var.log_retention_days
-  
+
   tags = {
     Name = "${var.project_name}-backend-logs"
   }
@@ -46,7 +46,7 @@ resource "aws_cloudwatch_log_group" "backend" {
 resource "aws_cloudwatch_log_group" "frontend" {
   name              = "/ecs/${var.project_name}-frontend"
   retention_in_days = var.log_retention_days
-  
+
   tags = {
     Name = "${var.project_name}-frontend-logs"
   }
@@ -54,7 +54,7 @@ resource "aws_cloudwatch_log_group" "frontend" {
 
 resource "aws_iam_role" "ecs_task_execution" {
   name = "${var.project_name}-ecs-task-execution"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -67,7 +67,7 @@ resource "aws_iam_role" "ecs_task_execution" {
       }
     ]
   })
-  
+
   tags = {
     Name = "${var.project_name}-ecs-task-execution-role"
   }
@@ -81,7 +81,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
 resource "aws_iam_role_policy" "ecs_secrets_access" {
   name = "${var.project_name}-ecs-secrets-access"
   role = aws_iam_role.ecs_task_execution.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -102,7 +102,7 @@ resource "aws_iam_role_policy" "ecs_secrets_access" {
 
 resource "aws_iam_role" "ecs_task" {
   name = "${var.project_name}-ecs-task"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -115,7 +115,7 @@ resource "aws_iam_role" "ecs_task" {
       }
     ]
   })
-  
+
   tags = {
     Name = "${var.project_name}-ecs-task-role"
   }
@@ -129,20 +129,20 @@ resource "aws_ecs_task_definition" "backend" {
   memory                   = var.backend_memory
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
-  
+
   container_definitions = jsonencode([
     {
       name      = "backend"
       image     = var.backend_image
       essential = true
-      
+
       portMappings = [
         {
           containerPort = 8000
           protocol      = "tcp"
         }
       ]
-      
+
       environment = [
         {
           name  = "DATABASE_URL"
@@ -161,9 +161,9 @@ resource "aws_ecs_task_definition" "backend" {
           value = "INFO"
         }
       ]
-      
+
       secrets = local.backend_secrets
-      
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -172,7 +172,7 @@ resource "aws_ecs_task_definition" "backend" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      
+
       healthCheck = {
         command     = ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
         interval    = 30
@@ -182,7 +182,7 @@ resource "aws_ecs_task_definition" "backend" {
       }
     }
   ])
-  
+
   tags = {
     Name = "${var.project_name}-backend-task"
   }
@@ -196,27 +196,27 @@ resource "aws_ecs_task_definition" "frontend" {
   memory                   = var.frontend_memory
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
-  
+
   container_definitions = jsonencode([
     {
       name      = "frontend"
       image     = var.frontend_image
       essential = true
-      
+
       portMappings = [
         {
           containerPort = 3000
           protocol      = "tcp"
         }
       ]
-      
+
       environment = [
         {
           name  = "NEXT_PUBLIC_BACKEND_URL"
           value = local.application_url
         }
       ]
-      
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -225,7 +225,7 @@ resource "aws_ecs_task_definition" "frontend" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      
+
       healthCheck = {
         command     = ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
         interval    = 30
@@ -235,7 +235,7 @@ resource "aws_ecs_task_definition" "frontend" {
       }
     }
   ])
-  
+
   tags = {
     Name = "${var.project_name}-frontend-task"
   }
@@ -247,21 +247,21 @@ resource "aws_ecs_service" "backend" {
   task_definition = aws_ecs_task_definition.backend.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
-  
+
   network_configuration {
     subnets          = aws_subnet.private[*].id
     security_groups  = [aws_security_group.ecs_tasks.id]
     assign_public_ip = false
   }
-  
+
   load_balancer {
     target_group_arn = aws_lb_target_group.backend.arn
     container_name   = "backend"
     container_port   = 8000
   }
-  
+
   depends_on = [aws_lb_listener.http, aws_db_instance.main]
-  
+
   tags = {
     Name = "${var.project_name}-backend-service"
   }
@@ -273,21 +273,21 @@ resource "aws_ecs_service" "frontend" {
   task_definition = aws_ecs_task_definition.frontend.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
-  
+
   network_configuration {
     subnets          = aws_subnet.private[*].id
     security_groups  = [aws_security_group.ecs_tasks.id]
     assign_public_ip = false
   }
-  
+
   load_balancer {
     target_group_arn = aws_lb_target_group.frontend.arn
     container_name   = "frontend"
     container_port   = 3000
   }
-  
+
   depends_on = [aws_lb_listener.http]
-  
+
   tags = {
     Name = "${var.project_name}-frontend-service"
   }
