@@ -28,7 +28,9 @@ export default function Home() {
     setStatusDetails("Connecting to research agents...");
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+      const backendUrl = typeof window !== 'undefined'
+        ? window.location.origin
+        : (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000');
       const wsUrl = backendUrl.replace(/^http/, 'ws') + '/ws';
       const ws = new WebSocket(wsUrl);
 

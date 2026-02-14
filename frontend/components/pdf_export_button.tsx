@@ -29,7 +29,7 @@ export default function PDFExportButton({
       };
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"}/api/research/export/pdf?citation_style=${citationStyle}`,
+        `/api/research/export/pdf?citation_style=${citationStyle}`,
         {
           method: "POST",
           headers: {
