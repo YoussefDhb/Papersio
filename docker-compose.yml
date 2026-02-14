@@ -14,7 +14,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./backend/research.db:/app/research.db
+      - ./backend/data:/app/data
       - ./backend/chroma_db:/app/chroma_db
       - ./backend/temp:/app/temp
     networks:

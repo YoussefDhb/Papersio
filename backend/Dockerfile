@@ -28,7 +28,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
-RUN mkdir -p temp chroma_db
+RUN mkdir -p temp chroma_db data
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
