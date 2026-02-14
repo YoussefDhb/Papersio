@@ -10,12 +10,12 @@ resource "aws_db_subnet_group" "main" {
 resource "random_password" "db_password" {
   length  = 32
   special = true
+  override_special = "!#$%&()*+,-.:;<=>?[]^_{|}~"
 }
 
 resource "aws_db_instance" "main" {
   identifier     = "${var.project_name}-db"
   engine         = "postgres"
-  engine_version = "15.4"
   
   instance_class    = var.db_instance_class
   allocated_storage = var.db_allocated_storage
@@ -31,7 +31,7 @@ resource "aws_db_instance" "main" {
   
   multi_az               = var.environment == "prod" ? true : false
   publicly_accessible    = false
-  backup_retention_period = var.environment == "prod" ? 7 : 1
+  backup_retention_period = 0
   backup_window          = "03:00-04:00"
   maintenance_window     = "sun:04:00-sun:05:00"
   
