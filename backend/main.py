@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import json
 from connection_manager import manager
+from database import init_db
 
 from llm import ModelFactory
 
@@ -49,6 +50,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def startup_event():
+    init_db()
 
 
 try:
