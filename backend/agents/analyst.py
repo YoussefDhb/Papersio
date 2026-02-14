@@ -11,24 +11,24 @@ class AnalystAgent:
     """
     Analyzes sources and extracts key information
     """
-    
+
     def __init__(self, llm_provider):
         """
         Initialize the analyst with an LLM provider
-        
+
         Args:
             llm_provider: LLMProvider instance
         """
         self.llm = llm_provider
-    
+
     def analyze_sources(self, question: str, sources_context: str) -> Dict:
         """
         Analyze sources and extract key information relevant to the question
-        
+
         Args:
             question: The research question
             sources_context: Combined text from all sources
-            
+
         Returns:
             Dict with:
             - key_findings: List of important facts
@@ -36,7 +36,7 @@ class AnalystAgent:
             - gaps: What's missing or unclear
             - analysis: Overall analysis text
         """
-        
+
         prompt = f"""You are an expert research analyst. Your job is to carefully analyze research sources and extract key information.
 
                 RESEARCH QUESTION: {question}
@@ -77,18 +77,17 @@ class AnalystAgent:
 
                 Respond with ONLY valid JSON, no other text.
                 """
-        
         try:
             response_text = self.llm.generate(prompt, temperature=0.5).strip()
-            
+
             if response_text.startswith("```"):
-                start = response_text.find('{')
-                end = response_text.rfind('}')
+                start = response_text.find("{")
+                end = response_text.rfind("}")
                 if start != -1 and end != -1:
-                    response_text = response_text[start:end+1]
-            
+                    response_text = response_text[start : end + 1]
+
             analysis = json.loads(response_text)
-            
+
             return {
                 "success": True,
                 "key_findings": analysis.get("key_findings", []),
@@ -96,18 +95,17 @@ class AnalystAgent:
                 "gaps": analysis.get("gaps", []),
                 "confidence": analysis.get("confidence", "medium"),
                 "summary": analysis.get("summary", ""),
-                "question": question
+                "question": question,
             }
-            
+
         except Exception as e:
             simple_prompt = f"""Analyze these sources for the question: {question}
 
 {sources_context}
 
 Provide a brief analysis of the key points."""
-            
             summary = self.llm.generate(simple_prompt, temperature=0.5)
-            
+
             return {
                 "success": False,
                 "error": str(e),
@@ -116,5 +114,5 @@ Provide a brief analysis of the key points."""
                 "gaps": [],
                 "confidence": "medium",
                 "summary": summary,
-                "question": question
+                "question": question,
             }

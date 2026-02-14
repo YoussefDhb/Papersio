@@ -11,30 +11,30 @@ class PlannerAgent:
     """
     Plans research by decomposing complex questions into sub-questions
     """
-    
+
     def __init__(self, llm_provider):
         """
         Initialize the planner with an LLM provider
-        
+
         Args:
             llm_provider: LLMProvider instance
         """
         self.llm = llm_provider
-    
+
     def create_research_plan(self, query: str) -> Dict:
         """
         Create a research plan by breaking down the query into sub-questions
-        
+
         Args:
             query: The main research question
-            
+
         Returns:
             Dict with:
             - main_query: Original question
             - sub_questions: List of sub-questions
             - reasoning: Why this breakdown makes sense
         """
-        
+
         prompt = f"""You are a research planning expert. Your job is to break down complex research questions into focused sub-questions.
 
                 MAIN RESEARCH QUESTION: {query}
@@ -66,26 +66,26 @@ class PlannerAgent:
 
                 Respond with ONLY the JSON, no other text.
                 """
-        
+
         try:
             response_text = self.llm.generate(prompt, temperature=0.7).strip()
-            
+
             if response_text.startswith("```"):
-                start = response_text.find('{')
-                end = response_text.rfind('}')
+                start = response_text.find("{")
+                end = response_text.rfind("}")
                 if start != -1 and end != -1:
-                    response_text = response_text[start:end+1]
-            
+                    response_text = response_text[start : end + 1]
+
             plan = json.loads(response_text)
-            
+
             return {
                 "main_query": query,
                 "needs_breakdown": plan.get("needs_breakdown", False),
                 "reasoning": plan.get("reasoning", ""),
                 "sub_questions": plan.get("sub_questions", []),
-                "success": True
+                "success": True,
             }
-            
+
         except json.JSONDecodeError as e:
             return {
                 "main_query": query,
@@ -93,7 +93,7 @@ class PlannerAgent:
                 "reasoning": f"Failed to parse plan: {str(e)}",
                 "sub_questions": [],
                 "success": False,
-                "error": "JSON parsing failed"
+                "error": "JSON parsing failed",
             }
         except Exception as e:
             return {
@@ -102,26 +102,34 @@ class PlannerAgent:
                 "reasoning": f"Error creating plan: {str(e)}",
                 "sub_questions": [],
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
-    
+
     def should_break_down(self, query: str) -> bool:
         """
         Quick check if a query needs to be broken down
-        
+
         Args:
             query: The research question
-            
+
         Returns:
             bool: True if needs breakdown, False otherwise
         """
         complex_keywords = [
-            'compare', 'difference', 'vs', 'versus',
-            'how does', 'how do', 'explain',
-            'pros and cons', 'advantages and disadvantages',
-            'better', 'best',
-            'relationship between', 'impact of'
+            "compare",
+            "difference",
+            "vs",
+            "versus",
+            "how does",
+            "how do",
+            "explain",
+            "pros and cons",
+            "advantages and disadvantages",
+            "better",
+            "best",
+            "relationship between",
+            "impact of",
         ]
-        
+
         query_lower = query.lower()
         return any(keyword in query_lower for keyword in complex_keywords)
