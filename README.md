@@ -6,7 +6,7 @@
 
 **AI-Powered Multi-Agent Research Platform**
 
-Papersio is a multi-agent research assistant that plans, searches, analyzes, writes, and critiques research reports. It uses Google Gemini models with a FastAPI backend and a Next.js frontend.
+Papersio is a multi-agent research assistant that writes evidence-driven research reports with citations and real-time progress updates.
 
 ## Table of Contents
 
@@ -48,7 +48,7 @@ Papersio orchestrates specialized agents to deliver research reports with citati
 
 - Python 3.11+
 - Node.js 20+
-- Docker Desktop (recommended)
+- Docker
 - Google Gemini API key
 
 ### Quick Start (Docker)
@@ -86,11 +86,6 @@ Frontend:
 cd frontend
 npm install
 npm run dev
-```
-
-Optional frontend override (local only):
-```bash
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 ```
 
 ## Usage
