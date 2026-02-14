@@ -28,7 +28,7 @@ Papersio orchestrates specialized agents to deliver research reports with citati
 
 ## Features
 
-- Multi-agent workflow (Planner, Analyst, Writer, Critic)
+- Multi-agent workflow (Planner -> Analyst -> Writer -> Critic)
 - Web and ArXiv search with smart routing
 - WebSocket live progress updates
 - LaTeX-based PDF report export
@@ -40,7 +40,7 @@ Papersio orchestrates specialized agents to deliver research reports with citati
 - Backend: FastAPI, LangGraph, ChromaDB, PostgreSQL (prod) or SQLite (dev)
 - Frontend: Next.js 16, TypeScript, Tailwind
 - LLM: Google Gemini (google-genai)
-- Infra: Docker Compose for local, Terraform for AWS ECS Fargate
+- Infra: Docker Compose for local, Terraform for AWS deployment
 
 ## Getting Started
 
@@ -102,7 +102,7 @@ Environment variables (project root .env):
 - `DEFAULT_PROVIDER` (default: gemini)
 - `DEFAULT_MODEL` (optional)
 - `HF_TOKEN` (optional, for embeddings)
-- `LOG_LEVEL` (optional)
+- `LOG_LEVEL` (optional, for backend logs)
 
 Frontend (optional):
 - `NEXT_PUBLIC_BACKEND_URL` to override the backend URL in local development
@@ -122,7 +122,7 @@ terraform apply
 Notes:
 - Set images, secrets, and region in terraform.tfvars
 - HTTPS and custom domain require ACM + Route 53
-- See terraform/deployment.txt for detailed guidance
+- See terraform/deployment.md for detailed guidance
 
 ## Project Structure
 
