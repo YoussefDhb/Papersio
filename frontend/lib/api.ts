@@ -1,6 +1,8 @@
 import { ResearchRequest, ResearchResponse } from '@/types/research';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+const API_BASE_URL = typeof window === 'undefined'
+  ? (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000')
+  : '';
 
 export class ResearchAPI {
   static async conductResearch(request: ResearchRequest): Promise<ResearchResponse> {
