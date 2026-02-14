@@ -2,7 +2,7 @@ resource "aws_secretsmanager_secret" "google_api_key" {
   name                    = "${var.project_name}-google-api-key"
   description             = "Google Gemini API key for Papersio"
   recovery_window_in_days = 7
-  
+
   tags = {
     Name = "${var.project_name}-google-api-key"
   }

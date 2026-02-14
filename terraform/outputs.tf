@@ -84,10 +84,10 @@ output "frontend_log_group" {
 output "deployment_summary" {
   description = "Summary of deployed resources"
   value = {
-    environment    = var.environment
-    region         = var.aws_region
+    environment     = var.environment
+    region          = var.aws_region
     application_url = var.certificate_arn != "" ? "https://${var.domain_name != "" ? var.domain_name : aws_lb.main.dns_name}" : "http://${aws_lb.main.dns_name}"
-    cluster_name   = aws_ecs_cluster.main.name
-    database       = aws_db_instance.main.endpoint
+    cluster_name    = aws_ecs_cluster.main.name
+    database        = aws_db_instance.main.endpoint
   }
 }

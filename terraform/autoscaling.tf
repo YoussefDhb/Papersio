@@ -12,12 +12,12 @@ resource "aws_appautoscaling_policy" "backend_cpu" {
   resource_id        = aws_appautoscaling_target.backend.resource_id
   scalable_dimension = aws_appautoscaling_target.backend.scalable_dimension
   service_namespace  = aws_appautoscaling_target.backend.service_namespace
-  
+
   target_tracking_scaling_policy_configuration {
     target_value       = var.cpu_threshold
     scale_in_cooldown  = 300
     scale_out_cooldown = 60
-    
+
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
@@ -30,12 +30,12 @@ resource "aws_appautoscaling_policy" "backend_memory" {
   resource_id        = aws_appautoscaling_target.backend.resource_id
   scalable_dimension = aws_appautoscaling_target.backend.scalable_dimension
   service_namespace  = aws_appautoscaling_target.backend.service_namespace
-  
+
   target_tracking_scaling_policy_configuration {
     target_value       = 80
     scale_in_cooldown  = 300
     scale_out_cooldown = 60
-    
+
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
@@ -56,12 +56,12 @@ resource "aws_appautoscaling_policy" "frontend_cpu" {
   resource_id        = aws_appautoscaling_target.frontend.resource_id
   scalable_dimension = aws_appautoscaling_target.frontend.scalable_dimension
   service_namespace  = aws_appautoscaling_target.frontend.service_namespace
-  
+
   target_tracking_scaling_policy_configuration {
     target_value       = var.cpu_threshold
     scale_in_cooldown  = 300
     scale_out_cooldown = 60
-    
+
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
