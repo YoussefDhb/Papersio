@@ -7,7 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models.research import Base
 
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), "research.db")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+DATABASE_PATH = os.path.join(DATA_DIR, "research.db")
 DEFAULT_SQLITE_URL = f"sqlite:///{DATABASE_PATH}"
 
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_SQLITE_URL)
@@ -62,6 +63,7 @@ def get_db_session() -> Session:
 
 
 if DATABASE_URL.startswith("sqlite"):
+    os.makedirs(DATA_DIR, exist_ok=True)
     if not os.path.exists(DATABASE_PATH):
         print(f"Creating new database at: {DATABASE_PATH}")
         init_db()

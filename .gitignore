@@ -40,8 +40,7 @@ dist/
 *.tfstate.*
 
 # Backend runtime data
-backend/research.db
-backend/research.db-journal
+backend/data/
 backend/chroma_db/
 backend/temp/
 
